@@ -14,6 +14,7 @@ from shapely.geometry import mapping
 import shapely
 import rasterio
 import pandas as pd
+import numpy as np
 from rasterio.mask import mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
@@ -190,21 +191,52 @@ def main():
     # ---------------------------------------------------------------------
     # 1. Define file paths (modify these)
     # ---------------------------------------------------------------------
-    roads_shp = "Input_data/globalroads.shp"
-    rivers_shp = "Input_data/ne_10m_rivers_lake_centerlines.shp"
-    forest_tif = "lulc_forest_50_90.tif"  # e.g., 1 for forest, 0 for non-forest
-    countries_shp = "Input_data/ee_r264_correspondence.gpkg"
-    value_csv = "Input_data/nontimber_ecosystem_services_iucn.csv"
+    roads_shp = "../../../Files/base_data/submissions/ntfp/global_roads/globalroads.shp"
+    rivers_shp = "../../../Files/base_data/submissions/ntfp/global_rivers/ne_10m_rivers_lake_centerlines.shp"
+    forest_tif = "../../../Files/global_invest/projects/ntfp/lulc_forest_50_90.tif"  # e.g., 1 for forest, 0 for non-forest
+    countries_shp = "../../../Files/base_data/cartographic/ee/ee_r264_correspondence.gpkg"
+    value_csv = "../../../Files/base_data/submissions/ntfp/nontimber_price_iucn.csv"
     
     # Temporary / output files
-    roads_reproj = "temp_data/roads_proj.gpkg"
-    rivers_reproj = "temp_data/rivers_proj.gpkg"
-    buffer_roads = "temp_data/roads_buffer_10km.gpkg"
-    buffer_rivers = "temp_data/rivers_buffer_10km.gpkg"
-    union_buffers_path = "temp_data/union_buffers.gpkg"
-    forest_reproj_tif = "temp_data/forest_proj.tif"
-    masked_forest_tif = "results/forest_10km_masked.tif"
-    out_area_value_csv = "results/forest_area_value_by_country.csv"
+    roads_reproj = "../../../Files/global_invest/projects/ntfp/roads_proj.gpkg"
+    rivers_reproj = "../../../Files/global_invest/projects/ntfp/rivers_proj.gpkg"
+    buffer_roads = "../../../Files/global_invest/projects/ntfp/roads_buffer_10km.gpkg"
+    buffer_rivers = "../../../Files/global_invest/projects/ntfp/rivers_buffer_10km.gpkg"
+    union_buffers_path = "../../../Files/global_invest/projects/ntfp/union_buffers.gpkg"
+    forest_reproj_tif = "../../../Files/global_invest/projects/ntfp/forest_proj.tif"
+    masked_forest_tif = "../../../Files/global_invest/projects/ntfp/forest_10km_masked.tif"
+    out_area_value_csv = "../../../Files/global_invest/projects/ntfp/forest_area_value_by_country.csv"
+
+    #################### Cut out forest land cover classes from lulc ESA 2020 - later to set a batch process for cutting forest for maps in year 1992-2020
+    lulc_raster_path = "../../../Files/base_data/lulc/esa/lulc_esa_2020.tif"
+    forest_tif = "../../../Files/global_invest/projects/ntfp/lulc_forest_50_90.tif"
+
+    with rasterio.open(lulc_raster_path) as src:
+        profile = src.profile.copy()
+    
+        # Optionally set a NoData value or keep 0 as a 'background' class
+        # If you want to use an official NoData marker, pick something like 0 or 255
+        # for Byte data, or -9999 for int32, etc.
+        #profile.update(nodata=0)  
+    
+        #Open a new file for writing
+        with rasterio.open(forest_tif, 'w', **profile) as dst:
+        
+            #Iterate over blocks for band 1
+            for idx, window in src.block_windows(1):
+                #Read the data for this window
+                data = src.read(1, window=window)
+            
+                #Create a mask for forest classes
+                forest_mask = (data >= 50) & (data <= 90)
+            
+                #Option 1: Keep the original value if forest, else 0
+                data_out = np.where(forest_mask, data, 0).astype(profile['dtype'])
+            
+                #Write to the output raster, same window
+                dst.write(data_out, 1, window=window)
+
+    print(f"Forest-only raster written to: {forest_tif}")
 
     # ---------------------------------------------------------------------
     # 2. Choose an appropriate projected CRS (WKT) for distance buffering
@@ -281,35 +313,35 @@ if __name__ == '__main__':
 
 
 #################### Cut out forest land cover classes from lulc ESA 2020 - later to set a batch process for cutting forest for maps in year 1992-2020
-raster_path = "input_data/lulc_esa_2020.tif"
-output_path = "lulc_forest_50_90.tif"
+# raster_path = "../../../Files/base_data/lulc/esa/lulc_esa_2020.tif"
+# output_path = "../../../Files/global_invest/projects/NTFP/lulc_forest_50_90.tif"
 
-with rasterio.open(raster_path) as src:
-    profile = src.profile.copy()
+# with rasterio.open(raster_path) as src:
+#     profile = src.profile.copy()
     
-    # Optionally set a NoData value or keep 0 as a 'background' class
-    # If you want to use an official NoData marker, pick something like 0 or 255
-    # for Byte data, or -9999 for int32, etc.
-    #profile.update(nodata=0)  
+#     # Optionally set a NoData value or keep 0 as a 'background' class
+#     # If you want to use an official NoData marker, pick something like 0 or 255
+#     # for Byte data, or -9999 for int32, etc.
+#     #profile.update(nodata=0)  
     
-    #Open a new file for writing
-    with rasterio.open(output_path, 'w', **profile) as dst:
+#     #Open a new file for writing
+#     with rasterio.open(output_path, 'w', **profile) as dst:
         
-        #Iterate over blocks for band 1
-        for idx, window in src.block_windows(1):
-            #Read the data for this window
-            data = src.read(1, window=window)
+#         #Iterate over blocks for band 1
+#         for idx, window in src.block_windows(1):
+#             #Read the data for this window
+#             data = src.read(1, window=window)
             
-            #Create a mask for forest classes
-            forest_mask = (data >= 50) & (data <= 90)
+#             #Create a mask for forest classes
+#             forest_mask = (data >= 50) & (data <= 90)
             
-            #Option 1: Keep the original value if forest, else 0
-            data_out = np.where(forest_mask, data, 0).astype(profile['dtype'])
+#             #Option 1: Keep the original value if forest, else 0
+#             data_out = np.where(forest_mask, data, 0).astype(profile['dtype'])
             
-            #Write to the output raster, same window
-            dst.write(data_out, 1, window=window)
+#             #Write to the output raster, same window
+#             dst.write(data_out, 1, window=window)
 
-print(f"Forest-only raster written to: {output_path}")
+# print(f"Forest-only raster written to: {output_path}")
 
 
 ####################
@@ -347,8 +379,8 @@ print(f"Forest-only raster written to: {output_path}")
 #print(f"Created 10 km buffer around roads: {roads_buffer_shp}")
 
 #4. Join river and road buffer of 10 km
-import geopandas as gpd
-from shapely.ops import unary_union
+#import geopandas as gpd
+#from shapely.ops import unary_union
 
 # 1. Read each layer
 #rivers_gdf = gpd.read_file("output_data/buffer_rivers.gpkg")
