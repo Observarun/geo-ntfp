@@ -1,6 +1,6 @@
 import os
 import ntfp_functions
-from ntfp_functions_v2_0 import *
+import ntfp_functions
 
 
 def task_create_forest_mask(p):
@@ -10,10 +10,7 @@ def task_create_forest_mask(p):
 
     p.forest_tif_path = os.path.join(p.project_dir, "lulc_forest_50_90.tif")
 
-    ntfp_functions.create_forest_mask(
-        p.raw_lulc_path,
-        p.forest_tif_path
-    )
+    ntfp_functions.create_forest_mask(p.raw_lulc_path, p.forest_tif_path)
     print("Forest mask created:", p.forest_tif_path)
 
 
@@ -60,6 +57,7 @@ def task_buffer_and_union(p):
     ntfp_functions.buffer_vector(p.rivers_reproj, p.buffer_rivers, p.buffer_distance_m)
     ntfp_functions.union_buffers([p.buffer_roads, p.buffer_rivers], p.union_buffers_path)
     print("Buffered roads/rivers and unioned the buffers.")
+
 
 def task_mask_and_calculate_stats(p):
     """

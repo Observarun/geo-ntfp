@@ -7,20 +7,20 @@ import ntfp_tasks
 
 def build_task_tree(p):
 
-    # Step 1: Create the forest mask from the raw LULC 2020 data
-    p.task_preprocess = p.add_task(ntfp_tasks.task_preprocess_forest_data)
+    # Create the forest mask from the raw LULC 2020 data
+    p.task_preprocess = p.add_task(ntfp_tasks.task_create_forest_mask)
 
-    # Step 2: Reproject all inputs (Roads, Rivers, Forest) to Mollweide
+    # Reproject all inputs (Roads, Rivers, Forest) to Mollweide
     p.task_reproject = p.add_task(ntfp_tasks.task_reproject_inputs)
     
-    # Step 3: Create buffers and union them
+    # Create buffers and union them
     p.task_buffer = p.add_task(ntfp_tasks.task_buffer_and_union)
     
-    # Step 4: Mask forest and calculate final stats
-    p.task_stats = p.add_task(ntfp_tasks.task_calculate_ntfp_value)
+    # Mask forest and calculate final stats
+    p.task_stats = p.add_task(ntfp_tasks.task_mask_and_calculate_stats)
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     
     # Create the project flow object
     p = hb.ProjectFlow()
@@ -41,10 +41,10 @@ if __name__ == 'main':
 
     # Set model paths
     p.raw_lulc_path = p.get_path(os.path.join(p.base_data_dir, "../../lulc/esa/lulc_esa_2020.tif"))
-    p.roads_shp = p.get_path(os.path.join(p.base_data_dir, "ntfp/global_rivers/globalroads.shp"))
-    p.rivers_shp = p.get_path(os.path.join(p.base_data_dir, "ntfp/global_rivers/ne_10m_rivers_lake_centerlines.shp"))
+    p.roads_shp = p.get_path(os.path.join(p.base_data_dir, "global_roads/globalroads.shp"))
+    p.rivers_shp = p.get_path(os.path.join(p.base_data_dir, "global_rivers/ne_10m_rivers_lake_centerlines.shp"))
     p.countries_shp = p.get_path(os.path.join(p.base_data_dir, "../../cartographic/ee/ee_r264_correspondence.gpkg"))
-    p.value_csv = p.get_path(os.path.join(p.base_data_dir, "ntfp/nontimber_price_iucn.csv"))
+    p.value_csv = p.get_path(os.path.join(p.base_data_dir, "/nontimber_price_iucn.csv"))
     p.buffer_distance_m = 10000
 
     # Build the task tree and execute it.
