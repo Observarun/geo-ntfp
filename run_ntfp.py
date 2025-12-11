@@ -40,11 +40,11 @@ if __name__ == '__main__':
     p.aoi = 'global'
 
     # Set model paths
-    p.raw_lulc_path = p.get_path(os.path.join(p.base_data_dir, "../../lulc/esa/lulc_esa_2020.tif"))
+    p.raw_lulc_path = p.get_path(os.path.join(p.base_data_dir, "../../lulc/esa/lulc_esa_2019.tif"))
     p.roads_shp = p.get_path(os.path.join(p.base_data_dir, "global_roads/globalroads.shp"))
     p.rivers_shp = p.get_path(os.path.join(p.base_data_dir, "global_rivers/ne_10m_rivers_lake_centerlines.shp"))
     p.countries_shp = p.get_path(os.path.join(p.base_data_dir, "../../cartographic/ee/ee_r264_correspondence.gpkg"))
-    p.value_csv = p.get_path(os.path.join(p.base_data_dir, "/nontimber_price_iucn.csv"))
+    p.value_csv = p.get_path(os.path.join(p.base_data_dir, "/nontimber_price_iucn_edited.csv"))
     p.buffer_distance_m = 10000
 
     # Build the task tree and execute it.

@@ -22,3 +22,8 @@ Thumbs.db
 *.shp
 *.gpkg
 *.csv
+
+# Specific files based on observation
+lulc_forest_50_90.tif
+roads_proj.gpkg
+rivers_proj.gpkg
